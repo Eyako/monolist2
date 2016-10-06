@@ -11,13 +11,17 @@ class OwnershipsController < ApplicationController
     # itemsテーブルに存在しない場合は楽天のデータを登録する。
     if @item.new_record?
       # TODO 商品情報の取得 RakutenWebService::Ichiba::Item.search を用いてください
-      items = {}
-
+      # items = {}
+      items = RakutenWebService::Ichiba::Item.search(itemCode: @item.item_code)
+       
       item                  = items.first
       @item.title           = item['itemName']
-      @item.small_image     = item['smallImageUrls'].first['imageUrl']
-      @item.medium_image    = item['mediumImageUrls'].first['imageUrl']
-      @item.large_image     = item['mediumImageUrls'].first['imageUrl'].gsub('?_ex=128x128', '')
+      @item.small_image     = item['smallImageUrls'].first['imageUrl'] if item['smallImageUrls'].present?
+      @item.medium_image    = item['mediumImageUrls'].first['imageUrl'] if item['mediumImageUrls'].present?
+      @item.large_image     = item['mediumImageUrls'].first['imageUrl'].gsub('?_ex=128x128', '') if item['mediumImageUrls'].present?
+      # @item.small_image     = item['smallImageUrls'].first['imageUrl']
+      # @item.medium_image    = item['mediumImageUrls'].first['imageUrl']
+      # @item.large_image     = item['mediumImageUrls'].first['imageUrl'].gsub('?_ex=128x128', '')
       @item.detail_page_url = item['itemUrl']
       @item.save!
     end
@@ -25,7 +29,8 @@ class OwnershipsController < ApplicationController
     # TODO ユーザにwant or haveを設定する
     # params[:type]の値にHaveボタンが押された時には「Have」,
     # Wantボタンが押された時には「Want」が設定されています。
-    
+     current_user.want(@item) if params[:type] == "Want"
+      current_user.have(@item) if params[:type] == "Have"
 
   end
 
